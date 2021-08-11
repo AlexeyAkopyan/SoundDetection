@@ -34,7 +34,7 @@ def CNN(input_shape):
     model.add(Dense(10, activation='softmax'))
     return model
 
-def calculate_mel_spec(audio, transpose=True, expand_dims=(0, )):
+def calculate_mel_spec(audio, cfg, transpose=True, expand_dims=(0, )):
     """
     Calculate a mal spectrogram from raw audio waveform
     Note: The parameters of the spectrograms are in the config.py file.
@@ -50,8 +50,8 @@ def calculate_mel_spec(audio, transpose=True, expand_dims=(0, )):
 
     spec = librosa.stft(
         audio,
-        n_fft=n_window,
-        hop_length=hop_length,
+        n_fft=cfg.n_window,
+        hop_length=cfg.hop_length,
         window=ham_win,
         center=True,
         pad_mode='reflect'
@@ -64,7 +64,7 @@ def calculate_mel_spec(audio, transpose=True, expand_dims=(0, )):
         fmin=cfg.f_min, fmax=cfg.f_max,
         htk=False, norm=None)
 
-    if save_log_feature:
+    if cfg.save_log_feature:
         mel_spec = librosa.amplitude_to_db(mel_spec)  # 10 * log10(S**2 / ref), ref default is 1
 
     if transpose:
@@ -115,7 +115,7 @@ def train(cfg):
     else:
         data['audio'] = data['slice_file_name'].apply(lambda x: librosa.load(data_path + '/' + x, sr=cfg.sr)[0])
 
-    data['features'] = data['audio'].apply(calculate_mel_spec)
+    data['features'] = data['audio'].apply(lambda x: calculate_mel_spec(x, cfg))
 
     # Pad features to the same shape
     if cfg.pad_size is None:
@@ -149,8 +149,7 @@ def train(cfg):
 
     # Test model quality
     y_pred = np.argmax(model.predict(X_test), axis=-1)
-    print(classification_report(y_test, y_pred, target_names=lb.classes_))
-
+    print(classification_report(np.argmax(y_test, axis=-1), y_pred, target_names=lb.classes_))
 
 def evaluate(cfg):
     data_path = cfg.data_path
@@ -183,14 +182,15 @@ def evaluate(cfg):
     with open(cfg.save_path + "/model.json", 'r') as json_file:
         model = json_file.read()
 
-    print(classification_report(y, model.predict(X), target_names=lb.classes_))
+    y_pred = np.argmax(model.predict(X), axis=-1)
+    print(classification_report(np.argmax(y, axis=-1), y_pred, target_names=lb.classes_))
 
 
 def predict(cfg, return_audio=False):
     audio, _ = librosa.load(cfg.filename, sr=cfg.sr)
     features = calculate_mel_spec(audio)
     features = pad_zeros(features, cfg.pad_size, cfg.pad_axis)
-    with open(cfg.save_path + "/model.json", 'r') as json_file:
+    with open(cfg.model_path, 'r') as json_file:
         model = json_file.read()
     pred_label = lb.inverse_transform([np.argmax(model(features))])
     if return_audio:

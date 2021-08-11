@@ -1,7 +1,6 @@
 import argparse
 import json
 import os
-import torch
 from main import train, eval, predict
 
 

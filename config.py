@@ -1,6 +1,5 @@
 import math
 
-
 data_path = "UrbanSound8K"
 save_path = '.'
 sr = 44100
@@ -12,6 +11,7 @@ n_mels = 64
 max_len_seconds = 10.
 max_frames = math.ceil(max_len_seconds * sr / hop_length)
 pooling_time_ratio = 8
+pad_size = 400
 
 f_min = 0.
 f_max = 22050.
