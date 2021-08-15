@@ -1,43 +1,36 @@
 import argparse
-import json
-import os
-from main import train, eval, predict
-
+import find_patterns
+from matplotlib import pyplot as plt
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='Sound detection')
 
-    argparser.add_argument('action', type=str,
-                           help='what action to take (train, test, predict)')
+    argparser.add_argument('-p', '--pattern', type=str,
+                           help="Audio-pattern, which need to be detected in audio-stream")
 
-    argparser.add_argument('-c', '--config', default=None, type=str,
-                           help='config file path (default: None)')
+    argparser.add_argument('-a', '--audio', type=str,
+                           help="Audio-stream, in which audio-pattern need to be detected ")
 
-    argparser.add_argument('-f', '--file', default=None, type=str,
-                           help='audio filename to prediction')
-    argparser.add_argument('--model-path', default=None, type=str,
-                           help='path to saved trained model file')
-    argparser.add_argument('--model-cfg', default=None, type=str,
-                           help='nn layer config file')
+    argparser.add_argument('--sr', default=22050, type=int,
+                           help="Sample rate (default 22050)")
+
+    argparser.add_argument('--n-mfcc', default=20, type=int,
+                           help="Number of MFCCs")
+
+    argparser.add_argument('-c', '--confidence', default=0.8, type=float,
+                           help="Minimal degree of similarity between the pattern and the audio-stream window"
+                                "(between 0 and 1)")
+
+    argparser.add_argument('-q', '--cut-quantile', default=0.96, type=float,
+                           help="Cut pattern parameter (between 0 and 1)")
 
     args = argparser.parse_args()
 
-    # Resolve config vs. resume
-    checkpoint = None
-    if args.config:
-        config = json.load(open(args.config))
-        config['net_mode'] = args.net_mode
-        config['cfg'] = args.cfg
+    if args.pattern is None or args.audio is None:
+        argparser.error("Arguments 'pattern' and 'audio' must be specified")
 
-    else:
-        raise AssertionError("Configuration file need to be specified. Add '-c config.json', for example.")
-
-    # Pick mode to run
-    if args.action == 'train':
-        train(config)
-
-    elif args.action == 'eval':
-        eval(config)
-
-    elif args.action == 'predict':
-        predict(cfg)
+    fig, ax = plt.subplots(1, 1, figsize=(6, 3))
+    fig.tight_layout(pad=2.0)
+    find_patterns.find_patterns(args.pattern, args.audio, sr=args.sr, n_mfcc=args.n_mfcc,
+                               threshold=args.confidence, q=args.cut_quantile)
+    plt.show()
