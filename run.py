@@ -17,7 +17,7 @@ if __name__ == '__main__':
     argparser.add_argument('--n-mfcc', default=20, type=int,
                            help="Number of MFCCs")
 
-    argparser.add_argument('-c', '--confidence', default=0.8, type=float,
+    argparser.add_argument('-t', '--threshold', default=0.8, type=float,
                            help="Minimal degree of similarity between the pattern and the audio-stream window"
                                 "(between 0 and 1)")
 
@@ -32,5 +32,5 @@ if __name__ == '__main__':
     fig, ax = plt.subplots(1, 1, figsize=(6, 3))
     fig.tight_layout(pad=2.0)
     find_patterns.find_patterns(args.pattern, args.audio, sr=args.sr, n_mfcc=args.n_mfcc,
-                               threshold=args.confidence, q=args.cut_quantile)
+                                threshold=args.threshold, q=args.cut_quantile)
     plt.show()
