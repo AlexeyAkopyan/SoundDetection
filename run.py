@@ -2,6 +2,15 @@ import argparse
 import find_patterns
 from matplotlib import pyplot as plt
 
+
+def isfloat(x):
+    try:
+        float(x)
+        return True
+    except ValueError:
+        return False
+
+
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='Sound detection')
 
@@ -31,6 +40,14 @@ if __name__ == '__main__':
 
     fig, ax = plt.subplots(1, 1, figsize=(6, 3))
     fig.tight_layout(pad=2.0)
-    find_patterns.find_patterns(args.pattern, args.audio, sr=args.sr, n_mfcc=args.n_mfcc,
-                                threshold=args.threshold, q=args.cut_quantile)
+    kwargs = {}
+    if args.sr in [22050, 44100]:
+        kwargs['sr'] = args.sr
+    if isinstance(args.n_mfcc, int) and args.n_mfcc > 0:
+        kwargs['n_mfcc'] = args.n_mfcc
+    if isfloat(args.threshold) and 0 <= float(args.threshold) <= 1:
+        kwargs['threshold'] = args.threshold
+    if isfloat(args.cut_quantile) and 0 <= float(args.cut_quantile) <= 1:
+        kwargs['q'] = args.cut_quantile
+    find_patterns.find_patterns(args.pattern, args.audio, **kwargs)
     plt.show()

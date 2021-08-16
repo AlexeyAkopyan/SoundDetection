@@ -5,6 +5,7 @@ import sounddevice as sd
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import find_patterns
+from run import isfloat
 
 
 def draw_figure(canvas, figure):
@@ -12,14 +13,6 @@ def draw_figure(canvas, figure):
     figure_canvas_agg.draw()
     figure_canvas_agg.get_tk_widget().pack(side='top', fill='both', expand=1)
     return figure_canvas_agg
-
-
-def isfloat(x):
-    try:
-        float(x)
-        return True
-    except ValueError:
-        return False
 
 
 def thread_stop_rec(button, duration):
@@ -116,13 +109,13 @@ if __name__ == "__main__":
         elif event == "Run":
 
             sr = window['sr'].Get()
-            sr = int(sr) if sr.isnumeric() else 22050
+            sr = int(sr) if sr in ['22050', '44100'] else 22050
             n_mfcc = window['n_mfcc'].Get()
-            n_mfcc = int(n_mfcc) if n_mfcc.isnumeric() else 20
+            n_mfcc = int(n_mfcc) if n_mfcc.isnumeric() and int(n_mfcc) > 0 else 20
             threshold = window['threshold'].Get()
-            threshold = float(threshold) if isfloat(threshold) else 0.8
+            threshold = float(threshold) if isfloat(threshold) and 0 <= float(threshold) <= 1 else 0.8
             q = window['q'].Get()
-            q = float(q) if isfloat(q) else 0.96
+            q = float(q) if isfloat(q) and 0 <= float(q) <= 1 else 0.96
             if graph is not None:
                 graph.get_tk_widget().forget()
 
